@@ -2,16 +2,18 @@ Features (User Stories): User = store clerk
 
 The project requirements are to meet 7 out of these objectives (Due date: not posted?)
 
-• Landing Page (4):
+Landing Page (4):
 • As a user I want to view top 5 rented films of all times
 • As a user I want to be able to click on any of the top 5 films and view its details
 • As a user I want to be able to view top 5 actors that are part of films I have in the store
 • As a user I want to be able to view the actor’s details and view their top 5 rented films
-• Films Page (3):
+
+Films Page (3):
 • As a user I want to be able to search a film by name of film, name of an actor, or genre of the film
 • As a user I want to be able to view details of the film
 • As a user I want to be able to rent a film out to a customer
-• Customer Page (7):
+
+Customer Page (7):
 • As a user I want to view a list of all customers (Pref. using pagination)
 • As a user I want the ability to filter/search customers by their customer id, first name or last name
 • As a user I want to be able to add a new customers
