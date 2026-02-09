@@ -1,6 +1,20 @@
+import 'dotenv/config';
+import mysql from 'mysql2'
+
+import express from 'express';
+const router = express.Router();
+
+const pool = mysql.createPool(
+  {
+    host : process.env.HOST,
+    user : process.env.USER,
+    password : process.env.MYSQLPASS,
+    database : process.env.DATABASE
+  }
+).promise()
 
 /* As a user I want to view top 5 rented films of all times */
-app.post('/query/topFiveRented', (req, res) => {
+router.get('/topFiveRented', (req, res) => {
 
   console.log("returning the top 5 rented films of all times");
 
@@ -9,7 +23,7 @@ app.post('/query/topFiveRented', (req, res) => {
 });
 
 /* Returns the details of a film */
-app.post('/query/getFilm', (req, res) => {
+router.get('/getFilm', (req, res) => {
 
   console.log("returning info about a movie");
 
@@ -18,7 +32,7 @@ app.post('/query/getFilm', (req, res) => {
 });
 
 /* As a user I want to be able to view top 5 actors that are part of films I have in the store */
-app.post('/query/topFiveActors', (req, res) => {
+router.get('/topFiveActors', (req, res) => {
 
   console.log("returning the top 5 actors that are part of the films in the store");
 
@@ -27,7 +41,7 @@ app.post('/query/topFiveActors', (req, res) => {
 });
 
 /* As a user I want to be able to view the actor’s details and view their top 5 rented films */
-app.post('/query/getActor', (req, res) => {
+router.get('/getActor', (req, res) => {
 
   console.log("returning info about a actor");
 
@@ -36,7 +50,7 @@ app.post('/query/getActor', (req, res) => {
 });
 
 /* As a user I want to be able to search a film by name of film, name of an actor, or genre of the film */
-app.post('/query/searchByAttribute', (req, res) => {
+router.get('/searchByAttribute', (req, res) => {
 
   console.log("returning films by some attribute");
 
@@ -45,10 +59,12 @@ app.post('/query/searchByAttribute', (req, res) => {
 });
 
 /* As a user I want to be able to rent a film out to a customer */
-app.post('/query/rentOut', (req, res) => {
+router.post('/rentOut', (req, res) => {
 
   console.log("Renting a film");
 
   const responseData = { success: true, message: 'Data updated' };
   res.json(responseData);
 });
+
+export default router;
