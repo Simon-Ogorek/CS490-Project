@@ -7,19 +7,36 @@ const router = express.Router();
 const pool = mysql.createPool(
   {
     host : process.env.HOST,
-    user : process.env.USER,
-    password : process.env.MYSQLPASS,
+    user : process.env.SQL_USER,
+    password : process.env.SQL_PASS,
     database : process.env.DATABASE
   }
 ).promise()
 
 /* As a user I want to view top 5 rented films of all times */
-router.get('/topFiveRented', (req, res) => {
+router.get('/topFiveRented', async (req, res) => {
 
-  console.log("returning the top 5 rented films of all times");
+  try
+  {
+    const [rows] = await pool.query(`
+      select film.film_id, film.title, category.name, count(rental.rental_id) as rental_count from sakila.film
+      join film_category on film.film_id=film_category.film_id
+      join category on film_category.category_id=category.category_id
+      join inventory on film.film_id=inventory.film_id
+      join rental on inventory.inventory_id=rental.inventory_id
+      group by film.film_id, category.category_id
+      order by rental_count desc
+      limit 5;
+      `)
+    console.log("returning the top 5 rented films of all times");
+    res.json(rows);
+  }
+  catch (err)
+  {
+    console.error(err);
+    res.status(500).json( {error: "Failed to query DB"} );
+  }
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
 });
 
 /* Returns the details of a film */
