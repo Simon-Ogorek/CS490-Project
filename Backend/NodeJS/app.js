@@ -7,6 +7,7 @@ const app = express();
 
 import queryRoutes from './query.js';
 
+app.use(express.json());
 app.use('/query', queryRoutes);
 
 app.get('/', (req, res) => {

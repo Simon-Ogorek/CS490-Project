@@ -4,6 +4,7 @@ import mysql from 'mysql2'
 import express from 'express';
 const router = express.Router();
 
+
 const pool = mysql.createPool(
   {
     host : process.env.HOST,
@@ -40,12 +41,25 @@ router.get('/topFiveRented', async (req, res) => {
 });
 
 /* Returns the details of a film */
-router.get('/getFilm', (req, res) => {
+router.post('/getFilm', async (req, res) => {
 
-  console.log("returning info about a movie");
+    try
+    {
+      const [rows] = await pool.query(`
+        select film.film_id, title, film_category.category_id, category.name from sakila.film
+        join film_category on film.film_id=film_category.film_id
+        join category on film_category.category_id=category.category_id
+        where film.film_id = ?`,
+         [req.body.id]);
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+      console.log("returning a film");
+      res.json(rows);
+    }
+  catch (err)
+  {
+    console.error(err);
+    res.status(500).json( {error: "Failed to query DB"} );
+  }
 });
 
 /* As a user I want to be able to view top 5 actors that are part of films I have in the store */
