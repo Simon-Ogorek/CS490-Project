@@ -42,7 +42,6 @@ router.get('/topFiveRented', async (req, res) => {
 
 /* Returns the details of a film */
 router.post('/getFilm', async (req, res) => {
-
     try
     {
       const [rows] = await pool.query(`
@@ -72,12 +71,35 @@ router.get('/topFiveActors', (req, res) => {
 });
 
 /* As a user I want to be able to view the actor’s details and view their top 5 rented films */
-router.get('/getActor', (req, res) => {
+router.post('/getActor', async (req, res) => {
 
-  console.log("returning info about a actor");
+  try
+  {
+    const [rows] = await pool.query(`
+      select film.film_id, film.title, count(rental.rental_id) as rental_count from sakila.film
+      join inventory on film.film_id=inventory.film_id
+      join rental on inventory.inventory_id=rental.inventory_id
+      join film_actor on film.film_id=film_actor.film_id 
+      where film_actor.actor_id = ?
+      group by film.film_id
+      order by rental_count desc
+      limit 5;`,
+    [req.body.id])
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+    const [actorInfoRow] = await pool.query(`
+      select actor.actor_id, actor.first_name, actor.last_name, actor.last_update from sakila.actor
+      where actor.actor_id = ?
+      limit 1;`,
+    [req.body.id])
+
+    console.log("returning the top 5 rented films of all times and actor details");
+    res.json({ rows, actorInfoRow} );
+  }
+  catch (err)
+  {
+    console.error(err);
+    res.status(500).json( {error: "Failed to query DB"} );
+  }
 });
 
 /* As a user I want to be able to search a film by name of film, name of an actor, or genre of the film */
