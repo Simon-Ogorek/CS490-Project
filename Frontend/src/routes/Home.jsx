@@ -51,7 +51,7 @@ const Home = () => {
                 <h1 className="text-6xl font-bold text-black text-center mt-20">Top 5 Actors</h1>
                 <div className="flex flex-row gap-6 overflow-x-auto whitespace-nowrap">
                     {actors.map((actor) => (
-                        <Link key={actor.actor_id} to={`/films/${actor.actor_id}`}>
+                        <Link key={actor.actor_id} to={`/actors/${actor.actor_id}`}>
                             <div className="flex flex-col items-center text-blue-500 hover:text-blue-700 transition">
                                 <FaUser className="text-6xl" />
                                 <h3 className="text-xl font-semibold">

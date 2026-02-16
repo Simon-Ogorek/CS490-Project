@@ -85,11 +85,17 @@ router.get('/topFiveActors', async (req, res) => {
 });
 
 /* As a user I want to be able to view the actor’s details and view their top 5 rented films */
-router.post('/getActor', async (req, res) => {
+router.get('/getActor/:id', async (req, res) => {
 
   try
   {
     const [rows] = await pool.query(`
+      select actor.actor_id, actor.first_name, actor.last_name, actor.last_update from sakila.actor
+      where actor.actor_id = ?
+      limit 1;`,
+      [req.params.id])
+
+    const [actorTopFilms] = await pool.query(`
       select film.film_id, film.title, count(rental.rental_id) as rental_count from sakila.film
       join inventory on film.film_id=inventory.film_id
       join rental on inventory.inventory_id=rental.inventory_id
@@ -98,16 +104,10 @@ router.post('/getActor', async (req, res) => {
       group by film.film_id
       order by rental_count desc
       limit 5;`,
-    [req.body.id])
+      [req.params.id])
 
-    const [actorInfoRow] = await pool.query(`
-      select actor.actor_id, actor.first_name, actor.last_name, actor.last_update from sakila.actor
-      where actor.actor_id = ?
-      limit 1;`,
-    [req.body.id])
-
-    console.log("returning the top 5 rented films of all times and actor details");
-    res.json({ rows, actorInfoRow} );
+    console.log("returning actor details and their top 5 films");
+    res.json({ actor:rows[0], topFilms:actorTopFilms} );
   }
   catch (err)
   {

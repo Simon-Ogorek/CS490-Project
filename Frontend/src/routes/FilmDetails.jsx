@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
 
 const FilmDetails = () => {
     const { id } = useParams()
@@ -54,4 +53,3 @@ const FilmDetails = () => {
 }
 
 export default FilmDetails
-    
