@@ -8,7 +8,7 @@ const Navbar = () => {
             <Link to="/">
                 <span className="font-semibold text-lg flex items-center gap-3 text-blue-400">
                     <BiCameraMovie className="text-6xl" />
-                    <span className="font-semibold text-2xl">Individual Project</span>
+                    <span className="font-semibold text-2xl">Sakila Film Store</span>
                 </span>
             </Link>
 

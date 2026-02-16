@@ -62,12 +62,26 @@ router.post('/getFilm', async (req, res) => {
 });
 
 /* As a user I want to be able to view top 5 actors that are part of films I have in the store */
-router.get('/topFiveActors', (req, res) => {
+router.get('/topFiveActors', async (req, res) => {
 
-  console.log("returning the top 5 actors that are part of the films in the store");
-
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+    try
+    {
+      const [rows] = await pool.query(`
+          select actor.actor_id, actor.first_name, actor.last_name, count(rental.rental_id) as rental_count from sakila.actor
+          join film_actor on actor.actor_id=film_actor.actor_id
+          join inventory on film_actor.film_id=inventory.film_id
+          join rental on inventory.inventory_id=rental.inventory_id
+          group by actor.actor_id
+          order by rental_count desc
+          limit 5;
+          `)
+      console.log("returning the top 5 rented actors");
+      res.json(rows);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to query DB" });
+    }
 });
 
 /* As a user I want to be able to view the actor’s details and view their top 5 rented films */
