@@ -41,18 +41,18 @@ router.get('/topFiveRented', async (req, res) => {
 });
 
 /* Returns the details of a film */
-router.post('/getFilm', async (req, res) => {
+router.get('/getFilm/:id', async (req, res) => {
     try
     {
       const [rows] = await pool.query(`
-        select film.film_id, title, film_category.category_id, category.name from sakila.film
+        select film.film_id, film.title, film.description, film.release_year, film.rating, film.length, category.name as category from sakila.film
         join film_category on film.film_id=film_category.film_id
         join category on film_category.category_id=category.category_id
         where film.film_id = ?`,
-         [req.body.id]);
+         [req.params.id]);
 
       console.log("returning a film");
-      res.json(rows);
+      res.json(rows[0]);
     }
   catch (err)
   {
