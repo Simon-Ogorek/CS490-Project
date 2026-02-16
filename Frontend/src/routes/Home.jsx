@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { BiFilm } from "react-icons/bi"
 import { FaUser } from "react-icons/fa"
 import { Link } from "react-router-dom"
