@@ -30,18 +30,21 @@ router.get('/topFiveRented', async (req, res) => {
       limit 5;
       `)
     console.log("returning the top 5 rented films of all times");
-    res.json(rows);
+    return res.json(rows);
   }
   catch (err)
   {
     console.error(err);
-    res.status(500).json( {error: "Failed to query DB"} );
+    return res.status(500).json( {error: "Failed to query DB"} );
   }
 
 });
 
 /* Returns the details of a film */
 router.post('/getFilm', async (req, res) => {
+  if (!req.body.film_id)
+    return res.status(400).json({error: "getting the film requires a film_id"});
+
     try
     {
       const [rows] = await pool.query(`
@@ -49,29 +52,48 @@ router.post('/getFilm', async (req, res) => {
         join film_category on film.film_id=film_category.film_id
         join category on film_category.category_id=category.category_id
         where film.film_id = ?`,
-         [req.body.id]);
+         [req.body.film_id]);
 
       console.log("returning a film");
-      res.json(rows);
+      return res.json(rows);
     }
   catch (err)
   {
     console.error(err);
-    res.status(500).json( {error: "Failed to query DB"} );
+    return res.status(500).json( {error: "Failed to query DB"} );
   }
 });
 
 /* As a user I want to be able to view top 5 actors that are part of films I have in the store */
-router.get('/topFiveActors', (req, res) => {
+router.get('/topFiveActors', async (req, res) => {
+  try
+  {
+    const [rows] = await pool.query(`
+      select actor.actor_id, actor.first_name, actor.last_name, count(distinct fa.film_id) as film_count from sakila.inventory
+      left join rental rental on inventory.inventory_id = rental.inventory_id and rental.return_date is NULL
+      join film_actor film_actor on inventory.film_id = film_actor.film_id
+      join actor actor on film_actor.actor_id = actor.actor_id
+      where rental.rental_id is NULL
+      group by actor.actor_id, actor.first_name, actor.last_name
+      order by film_count desc
+      limit 5;`)
 
-  console.log("returning the top 5 actors that are part of the films in the store");
+      console.log("returning the top 5 actors based on the unrented films");
+      return res.json(rows);
+  }
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+  catch (err)
+  {
+    console.error(err);
+    return res.status(500).json( {error: "Failed to query DB"} );
+  }
 });
 
 /* As a user I want to be able to view the actor’s details and view their top 5 rented films */
 router.post('/getActor', async (req, res) => {
+
+  if (!req.body.actor_id)
+    return res.status(400).json({error: "no actor_id field to query for an actor"});
 
   try
   {
@@ -84,40 +106,91 @@ router.post('/getActor', async (req, res) => {
       group by film.film_id
       order by rental_count desc
       limit 5;`,
-    [req.body.id])
+    [req.body.actor_id])
 
     const [actorInfoRow] = await pool.query(`
       select actor.actor_id, actor.first_name, actor.last_name, actor.last_update from sakila.actor
       where actor.actor_id = ?
       limit 1;`,
-    [req.body.id])
+    [req.body.actor_id])
 
     console.log("returning the top 5 rented films of all times and actor details");
-    res.json({ rows, actorInfoRow} );
+    return res.json({ rows, actorInfoRow} );
   }
   catch (err)
   {
     console.error(err);
-    res.status(500).json( {error: "Failed to query DB"} );
+    return res.status(500).json( {error: "Failed to query DB"} );
   }
 });
 
 /* As a user I want to be able to search a film by name of film, name of an actor, or genre of the film */
-router.get('/searchByAttribute', (req, res) => {
+router.get('/searchByAttribute', async (req, res) => {
 
-  console.log("returning films by some attribute");
+  if (!req.body.film_name && !req.body.first_name && !req.body.last_name && !req.body.genre)
+    return res.status(400).json({error: "search requires at least one attribute (film_id, first_name, last_name, or genre"});
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+  try
+  {
+    const [rows] = await pool.query(`
+      select distinct film.film_id, film.title, category.name concat(actor.first_name, ' ', actor.last_name) as actor from sakila.film
+      left join film_actor on film.film_id = film_actor.film_id
+      left join actor on film_actor.actor_id = actor.actor_id
+      left join film_category on film.film_id = film_category.film_id
+      left join category on film_category.category_id = category.category_id
+      where film.title like ? or actor.first_name like ? or actor.last_name like ? or category.name like ?;`,
+    [req.body.film_name, req.body.first_name, req.body.last_name, req.body.genre])
+
+    return res.json({ rows } );
+  }
+
+  catch (err)
+  {
+    console.error(err);
+    return res.status(500).json( {error: "Failed to query DB"} );
+  }
+
 });
 
 /* As a user I want to be able to rent a film out to a customer */
-router.post('/rentOut', (req, res) => {
+router.post('/rentOut', async (req, res) => {
 
-  console.log("Renting a film");
+    if (!req.body.customer_id || !req.body.film_id)
+      return res.status(400).json({error: "Renting out a film requires a customer_id and film_id"});
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+  try
+  {
+    const [inventoryRows] = await pool.query(`
+      select inventory.inventory_id from sakila.inventory
+      left join rental rental
+      on inventory.inventory_id = rental.inventory_id and rental.return_date is NULL
+      where inventory.film_id = ? and rental.rental_id is NULL
+      limit 1`,
+    [req.body.film_id])
+
+    if (inventoryRows.length == 0)
+    {
+      res.status(409).json( { error: "No films left of this id to rent out"} );
+    }
+
+    const inventory_id = inventoryRows[0].inventory_id;
+
+    const [rentalResult] = await pool.execute(`
+      insert into rental ( rental_date, inventory_id, customer_id, staff_id)
+      values (now(), ?, ?, ? )`,
+    [inventory_id, req.body.customer_id, (req.body.staff_id) ? req.body.staff_id : 1]);
+
+    await pool.commit();
+
+    return res.status(200).json( {rentalResult} );
+  }
+
+  catch (err)
+  {
+    await pool.rollback();
+    console.error(err);
+    return res.status(500).json( {error: "Failed to query DB"} );
+  }
 });
 
 export default router;
