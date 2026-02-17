@@ -155,7 +155,7 @@ router.get('/searchByAttribute', async (req, res) => {
 /* As a user I want to be able to rent a film out to a customer */
 router.post('/rentOut', async (req, res) => {
 
-    if (!req.body.customer_id || !req.body.film_id)
+    if (!req.body.film_id)
       return res.status(400).json({error: "Renting out a film requires a customer_id and film_id"});
 
   try
@@ -178,7 +178,7 @@ router.post('/rentOut', async (req, res) => {
     const [rentalResult] = await pool.execute(`
       insert into rental ( rental_date, inventory_id, customer_id, staff_id)
       values (now(), ?, ?, ? )`,
-    [inventory_id, req.body.customer_id, (req.body.staff_id) ? req.body.staff_id : 1]);
+    [inventory_id, 1, (req.body.staff_id) ? req.body.staff_id : 1]);
 
     await pool.commit();
 
