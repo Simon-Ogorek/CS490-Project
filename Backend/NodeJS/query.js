@@ -117,12 +117,28 @@ router.get('/getActor/:id', async (req, res) => {
 });
 
 /* As a user I want to be able to search a film by name of film, name of an actor, or genre of the film */
-router.get('/searchByAttribute', (req, res) => {
+router.get('/searchByAttribute/:attribute', async (req, res) => {
+    try {
+        const attr = `%${req.params.attribute}%`;
 
-  console.log("returning films by some attribute");
+        const [rows] = await pool.query(`
+        select film.film_id, film.title, actor.first_name, actor.last_name, category.name from sakila.film
+        join film_actor on film.film_id=film_actor.film_id
+        join actor on film_actor.actor_id=actor.actor_id
+        join film_category on film.film_id=film_category.film_id
+        join category on film_category.category_id=category.category_id
+        where title like ?
+        or category.name like ?
+        or concat(actor.first_name, ' ', actor.last_name) like ?`,
+        [attr, attr, attr, attr]);
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+        console.log("Returning films");
+        res.json(rows);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to query DB" });
+    }
 });
 
 /* As a user I want to be able to rent a film out to a customer */
