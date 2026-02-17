@@ -25,7 +25,7 @@ const ActorDetails = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-10">
+        <div className="min-h-screen bg-slate-50 p-10 mt-10">
             <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8">
 
                 <h1 className="text-4xl font-bold mb-4">
