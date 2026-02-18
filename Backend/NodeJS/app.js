@@ -10,6 +10,8 @@ import queryRoutes from './query.js';
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use('/query', queryRoutes);
 
 app.get('/', (req, res) => {

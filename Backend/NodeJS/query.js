@@ -151,35 +151,42 @@ router.post('/rentOut', async (req, res) => {
     if (!req.body.film_id)
         return res.status(400).json({ error: "Renting out a film requires a customer_id and film_id" });
 
+    const connection = await pool.getConnection();
+
     try {
-        const [inventoryRows] = await pool.query(`
+        await connection.beginTransaction();
+
+        const [inventoryRows] = await connection.query(`
         select inventory.inventory_id from sakila.inventory
         left join rental rental
         on inventory.inventory_id = rental.inventory_id and rental.return_date is NULL
         where inventory.film_id = ? and rental.rental_id is NULL
         limit 1`,
-        [req.body.film_id])
+            [req.body.film_id])
 
         if (inventoryRows.length == 0) {
+            await connection.rollback();
             res.status(409).json({ error: "No films left of this id to rent out" });
         }
 
         const inventory_id = inventoryRows[0].inventory_id;
-        
-        const [rentalResult] = await pool.execute(`
+
+        const [rentalResult] = await connection.execute(`
         insert into rental ( rental_date, inventory_id, customer_id, staff_id)
         values (now(), ?, ?, ? )`,
-            [inventory_id, 1, (req.body.staff_id) ? req.body.staff_id : 1]);
+            [inventory_id, req.body.customer_id, req.body.staff_id || 1]);
 
-        await pool.commit();
+        await connection.commit();
 
         return res.status(200).json({ rentalResult });
     }
 
     catch (err) {
-        await pool.rollback();
+        await connection.rollback();
         console.error(err);
         return res.status(500).json({ error: "Failed to query DB" });
+    } finally {
+        connection.release()
     }
 });
 
