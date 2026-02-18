@@ -118,36 +118,69 @@ router.get('/getActor/:id', async (req, res) => {
 
 /* As a user I want to be able to search a film by name of film, name of an actor, or genre of the film */
 router.get('/searchByAttribute/:attribute', async (req, res) => {
+
+    const attr = `%${req.params.attribute}%`;
+    /*
+    if (!req.body.film_name && !req.body.first_name && !req.body.last_name && !req.body.genre)
+        return res.status(400).json({ error: "search requires at least one attribute (film_id, first_name, last_name, or genre" });
+    */
+
     try {
-        const attr = `%${req.params.attribute}%`;
-
         const [rows] = await pool.query(`
-        select film.film_id, film.title, actor.first_name, actor.last_name, category.name from sakila.film
-        join film_actor on film.film_id=film_actor.film_id
-        join actor on film_actor.actor_id=actor.actor_id
-        join film_category on film.film_id=film_category.film_id
-        join category on film_category.category_id=category.category_id
-        where title like ?
-        or category.name like ?
-        or concat(actor.first_name, ' ', actor.last_name) like ?`,
-        [attr, attr, attr, attr]);
+        select distinct film.film_id, film.title, category.name, actor.first_name, actor.last_name from sakila.film
+        left join film_actor on film.film_id = film_actor.film_id
+        left join actor on film_actor.actor_id = actor.actor_id
+        left join film_category on film.film_id = film_category.film_id
+        left join category on film_category.category_id = category.category_id
+        where film.title like ? or concat(actor.first_name, ' ', actor.last_name) like ? or category.name like ?;`,
+        [attr, attr, attr, attr])
 
-        console.log("Returning films");
-        res.json(rows);
+        return res.json(rows);
     }
+
     catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to query DB" });
+        return res.status(500).json({ error: "Failed to query DB" });
     }
+
 });
 
 /* As a user I want to be able to rent a film out to a customer */
-router.post('/rentOut', (req, res) => {
+router.post('/rentOut', async (req, res) => {
 
-  console.log("Renting a film");
+    if (!req.body.film_id)
+        return res.status(400).json({ error: "Renting out a film requires a customer_id and film_id" });
 
-  const responseData = { success: true, message: 'Data updated' };
-  res.json(responseData);
+    try {
+        const [inventoryRows] = await pool.query(`
+        select inventory.inventory_id from sakila.inventory
+        left join rental rental
+        on inventory.inventory_id = rental.inventory_id and rental.return_date is NULL
+        where inventory.film_id = ? and rental.rental_id is NULL
+        limit 1`,
+        [req.body.film_id])
+
+        if (inventoryRows.length == 0) {
+            res.status(409).json({ error: "No films left of this id to rent out" });
+        }
+
+        const inventory_id = inventoryRows[0].inventory_id;
+        
+        const [rentalResult] = await pool.execute(`
+        insert into rental ( rental_date, inventory_id, customer_id, staff_id)
+        values (now(), ?, ?, ? )`,
+            [inventory_id, 1, (req.body.staff_id) ? req.body.staff_id : 1]);
+
+        await pool.commit();
+
+        return res.status(200).json({ rentalResult });
+    }
+
+    catch (err) {
+        await pool.rollback();
+        console.error(err);
+        return res.status(500).json({ error: "Failed to query DB" });
+    }
 });
 
 export default router;

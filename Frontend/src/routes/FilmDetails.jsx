@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
+import { MdMovie } from "react-icons/md"
 
 const FilmDetails = () => {
     const { id } = useParams()
@@ -46,6 +47,18 @@ const FilmDetails = () => {
                 <p className="mt-4 text-gray-800">
                     {film.description}
                 </p>
+
+                
+                <form action="http://localhost:8080/query/rentOut" method="POST" >
+                    <input type="hidden" id={ film.film_id } />
+                    <button type="submit" className="flex flex-col items-center text-blue-500 hover:text-blue-700 transition mt-3">
+                        <MdMovie className="text-6xl" />
+                        <h3 className="text-xl font-semibold">
+                            Rent Out
+                        </h3>
+                    </button>
+                </form>
+                
 
             </div>
         </div>
