@@ -127,12 +127,13 @@ router.get('/searchByAttribute/:attribute', async (req, res) => {
 
     try {
         const [rows] = await pool.query(`
-        select distinct film.film_id, film.title, category.name, actor.first_name, actor.last_name from sakila.film
+        select film.film_id, film.title, category.name, group_concat(concat(actor.first_name, " ", actor.last_name)) as actors from sakila.film
         left join film_actor on film.film_id = film_actor.film_id
         left join actor on film_actor.actor_id = actor.actor_id
         left join film_category on film.film_id = film_category.film_id
         left join category on film_category.category_id = category.category_id
-        where film.title like ? or concat(actor.first_name, ' ', actor.last_name) like ? or category.name like ?;`,
+        where film.title like ? or concat(actor.first_name, ' ', actor.last_name) like ? or category.name like ?
+        group by film.film_id, film.title, category.name;`,
         [attr, attr, attr, attr])
 
         return res.json(rows);
