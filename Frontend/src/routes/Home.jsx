@@ -26,8 +26,8 @@ const Home = () => {
     }, [])
 
     return (
-        <div className="min-h-screen bg-slate-50 w-full flex">
-            <div className="flex flex-col items-start max-w-3xl gap-5">
+        <div className="min-h-screen bg-slate-50 w-full flex items-center justify-center">
+            <div className="flex flex-col items-center gap-5">
                 <h1 className="text-6xl font-bold text-black text-center mt-20">Top 5 Rented Films</h1>
                 <div className="flex flex-row gap-6 overflow-x-auto whitespace-nowrap">
                     {films.map((film) => (
@@ -48,7 +48,7 @@ const Home = () => {
                     ))}
                 </div>
                 
-                <h1 className="text-6xl font-bold text-black text-center mt-20">Top 5 Actors</h1>
+                <h1 className="text-6xl font-bold text-black text-center mt-10">Top 5 Actors</h1>
                 <div className="flex flex-row gap-6 overflow-x-auto whitespace-nowrap">
                     {actors.map((actor) => (
                         <Link key={actor.actor_id} to={`/actors/${actor.actor_id}`}>

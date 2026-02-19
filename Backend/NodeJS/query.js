@@ -127,7 +127,7 @@ router.get('/searchByAttribute/:attribute', async (req, res) => {
 
     try {
         const [rows] = await pool.query(`
-        select film.film_id, film.title, category.name, group_concat(concat(actor.first_name, " ", actor.last_name)) as actors from sakila.film
+        select film.film_id, film.title, category.name, group_concat(concat(" ", actor.first_name, " ", actor.last_name)) as actors from sakila.film
         left join film_actor on film.film_id = film_actor.film_id
         left join actor on film_actor.actor_id = actor.actor_id
         left join film_category on film.film_id = film_category.film_id
