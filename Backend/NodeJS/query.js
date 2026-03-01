@@ -191,4 +191,21 @@ router.post('/rentOut', async (req, res) => {
     }
 });
 
+/* As a user I want to view a list of all customers (Pref. using pagination) */
+router.get('/allCustomers', async (req, res) => {
+
+    try
+    {
+      const [rows] = await pool.query(`
+          select * from sakila.customer
+          `)
+      console.log("Returning all customers");
+      res.json(rows);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to query DB" });
+    }
+});
+
 export default router;
