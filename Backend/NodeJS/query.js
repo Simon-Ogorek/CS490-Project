@@ -192,20 +192,196 @@ router.post('/rentOut', async (req, res) => {
 });
 
 /* As a user I want to view a list of all customers (Pref. using pagination) */
-router.get('/allCustomers', async (req, res) => {
 
+/* As a user I want the ability to filter/search customers by their customer id, first name or last name */
+
+router.post('/getCustomers', async (req, res) => {
     try
     {
-      const [rows] = await pool.query(`
+      if (!req.body.id && !req.body.first_name && !req.body.last_name)
+      {
+        const [rows] = await pool.query(`
           select * from sakila.customer
           `)
-      console.log("Returning all customers");
-      res.json(rows);
+        console.log("Returning all customers");
+        res.json(rows);
+      }
+      else
+      {
+        const [rows] = await pool.query(`
+        select customer.customer_id, customer.first_name, customer.last_name, customer.email from sakila.customer
+        where customer.customer_id = ? or customer.first_name like ? or customer.last_name like ?`,
+        [req.body.id, `%${req.body.first_name}%`, `%${req.body.last_name}%`])
+
+        console.log("Returning some customers");
+        res.json(rows);
+      }
+      
+      
     }
     catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to query DB" });
     }
 });
+
+/*As a user I want to be able to add a new customers*/
+router.post('/addCustomer', async (req, res) => {
+
+    if (!req.body.first_name && !req.body.last_name && !req.body.email)
+        return res.status(400).json({ error: "No info to add customer to DB" });
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [customerResult] = await connection.execute(`
+        insert into customer ( store_id, address_id, first_name, last_name, email )
+        values (1,1,?, ?, ? )`,
+            [req.body.first_name, req.body.last_name, req.body.email]);
+
+        await connection.commit();
+
+        return res.status(200).json({ customerResult });
+    }
+
+    catch (err) {
+        await connection.rollback();
+        console.error(err);
+        return res.status(500).json({ error: "Failed to query DB" });
+    } finally {
+        connection.release()
+    }
+});
+
+/*As a user I want to be able to edit a customer’s details*/
+router.post('/editCustomer', async (req, res) => {
+
+    if (!req.body.id)
+        return res.status(400).json({ error: "Need an id to edit a customer" });
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [customerRow] = await pool.query(`
+        select * from sakila.customer
+        where customer_id = ?`,
+        [req.body.id])
+
+        const [customerResult] = await connection.execute(`
+        update sakila.customer
+        set first_name = ?,
+            last_name = ?,
+            email = ?
+        where customer_id = ?`,
+            [req.body.first_name ?? customerRow[0].first_name,
+              req.body.last_name ?? customerRow[0].last_name,
+              req.body.email ?? customerRow[0].email,
+              req.body.id]);
+
+        await connection.commit();
+
+        return res.status(200).json({ customerResult });
+    }
+
+    catch (err) {
+        await connection.rollback();
+        console.error(err);
+        return res.status(500).json({ error: "Failed to query DB" });
+    } finally {
+        connection.release()
+    }
+});
+
+/*As a user I want to be able to delete a customer if they no longer wish to patron at store*/
+router.post('/deleteCustomer', async (req, res) => {
+
+    if (!req.body.id)
+        return res.status(400).json({ error: "Need an id to delete a customer" });
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [customerResult] = await connection.execute(`
+        delete from sakila.customer where customer.customer_id = ?`,
+            [req.body.id]);
+
+        await connection.commit();
+
+        return res.status(200).json({ customerResult });
+    }
+
+    catch (err) {
+        await connection.rollback();
+        console.error(err);
+        return res.status(500).json({ error: "Failed to query DB" });
+    } finally {
+        connection.release()
+    }
+});
+
+/* As a user I want to be able to view customer details and see their past and present rental history */
+
+router.post('/getCustomerDetails', async (req, res) => {
+
+    if (!req.body.id)
+          return res.status(400).json({ error: "Need an id to delete a customer" });
+
+    try
+    {
+      const [rows] = await pool.query(`
+      select * from sakila.customer
+      where customer.customer_id = ?`,
+      [req.body.id])
+
+      const [rental] = await pool.query(`
+      select * from sakila.rental
+      where rental.customer_id = ?`,
+      [req.body.id])
+    
+      res.json({ customer: rows, rentals: rental});
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to query DB" });
+    }
+});
+
+/* As a user I want to be able to indicate that a customer has returned a rented movie */
+router.post('/returnRental', async (req, res) => {
+
+    if (!req.body.id)
+        return res.status(400).json({ error: "Renting out a film requires a rental_id" });
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [rentalResult] = await connection.execute(`
+        update sakila.rental
+        set rental.return_date = now()
+        where rental.rental_id = ?`,
+            [req.body.id]);
+
+        await connection.commit();
+
+        return res.status(200).json({ rentalResult });
+    }
+
+    catch (err) {
+        await connection.rollback();
+        console.error(err);
+        return res.status(500).json({ error: "Failed to query DB" });
+    } finally {
+        connection.release()
+    }
+});
+
 
 export default router;
