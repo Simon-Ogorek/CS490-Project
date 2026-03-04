@@ -198,26 +198,57 @@ router.post('/rentOut', async (req, res) => {
 router.post('/getCustomers', async (req, res) => {
     try
     {
-      if (!req.body.id && !req.body.first_name && !req.body.last_name)
-      {
-        const [rows] = await pool.query(`
-          select * from sakila.customer
-          `)
-        console.log("Returning all customers");
-        res.json(rows);
-      }
-      else
-      {
-        const [rows] = await pool.query(`
-        select customer.customer_id, customer.first_name, customer.last_name, customer.email from sakila.customer
-        where customer.customer_id = ? or customer.first_name like ? or customer.last_name like ?`,
-        [req.body.id, `%${req.body.first_name}%`, `%${req.body.last_name}%`])
+        const page = parseInt(req.query.page) || 0;
+        const limit = parseInt(req.query.limit) || 5;
+        const offset = (page - 1) * limit;
+
+        if (!req.body.id && !req.body.first_name && !req.body.last_name) {
+            const [rows] = await pool.query(`
+                select * from sakila.customer
+                limit ? offset ?`,
+                [limit, offset])
+            console.log("Returning all customers");
+            res.json(rows);
+        }
+        else {
+            let query = `
+            select customer.customer_id, customer.first_name, customer.last_name, customer.email 
+            from sakila.customer
+            `;
+
+            let conditions = [];
+            let values = [];
+
+            if (req.body.id) {
+                conditions.push("customer.customer_id = ?");
+                values.push(req.body.id);
+            }
+
+            if (req.body.first_name) {
+                conditions.push("customer.first_name like ?");
+                values.push(`%${req.body.first_name}%`);
+            }
+
+            if (req.body.last_name) {
+                conditions.push("customer.last_name like ?");
+                values.push(`%${req.body.last_name}%`);
+            }
+
+            if (conditions.length > 0) {
+                query += " where " + conditions.join(" or ");
+            }
+
+            query += " limit ? offset ?";
+            values.push(limit, offset);
+
+            const [rows] = await pool.query(query, values);
+
+            res.json(rows);
 
         console.log("Returning some customers");
         res.json(rows);
       }
-      
-      
+ 
     }
     catch (err) {
         console.error(err);
@@ -327,24 +358,24 @@ router.post('/deleteCustomer', async (req, res) => {
 
 /* As a user I want to be able to view customer details and see their past and present rental history */
 
-router.post('/getCustomerDetails', async (req, res) => {
+router.get('/getCustomerDetails/:id', async (req, res) => {
 
-    if (!req.body.id)
-          return res.status(400).json({ error: "Need an id to delete a customer" });
+    if (!req.params.id)
+          return res.status(400).json({ error: "Need customer id" });
 
     try
     {
       const [rows] = await pool.query(`
       select * from sakila.customer
       where customer.customer_id = ?`,
-      [req.body.id])
+      [req.params.id])
 
       const [rental] = await pool.query(`
       select * from sakila.rental
       where rental.customer_id = ?`,
-      [req.body.id])
+      [req.params.id])
     
-      res.json({ customer: rows, rentals: rental});
+      res.json({ customer: rows[0], rentals: rental});
     }
     catch (err) {
         console.error(err);

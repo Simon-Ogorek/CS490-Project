@@ -4,6 +4,10 @@ import Home from "./routes/Home"
 import FilmSearch from "./routes/FilmSearch"
 import FilmDetails from "./routes/FilmDetails"
 import ActorDetails from "./routes/ActorDetails"
+import CustomerSearch from "./routes/CustomerSearch"
+import CustomerDetails from "./routes/CustomerDetails"
+import EditCustomerDetails from "./routes/EditCustomerDetails"
+
 function App() {
     return (
         <>
@@ -14,6 +18,9 @@ function App() {
                     <Route path="/filmsearch" element={<FilmSearch />} />
                     <Route path="/films/:id" element={<FilmDetails />} />
                     <Route path="/actors/:id" element={<ActorDetails />} />
+                    <Route path="/customersearch" element={<CustomerSearch />} />
+                    <Route path="/customers/:id" element={<CustomerDetails />} />
+                    <Route path="/editcustomer/:id" element={<EditCustomerDetails />} />
                 </Routes>
             </div>
         </>
