@@ -34,7 +34,7 @@ const CustomerSearch = () => {
                     <h1 className="text-3xl font-bold mb-6">
                         Customers
                     </h1>
-                    <Link to="/" className="py-1 px-3 text-lg font-semibold text-blue-500 hover:text-white rounded-2xl hover:bg-blue-500 transition duration-300">
+                    <Link to="/addcustomer" className="py-1 px-3 text-lg font-semibold text-blue-500 hover:text-white rounded-2xl hover:bg-blue-500 transition duration-300">
                         Add New Customer
                     </Link>
                 </div>

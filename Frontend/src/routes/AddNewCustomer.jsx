@@ -2,34 +2,21 @@ import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
-const EditCustomerDetails = () => {
+const AddNewCustomer = () => {
     const { id } = useParams()
 
-    const [customer, setCustomer] = useState(null)
+    //const [customer, setCustomer] = useState(null)
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
 
-    useEffect(() => {
-        fetch(`http://localhost:8080/query/getCustomerDetails/${id}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log(data)
-                setCustomer(data)
-                setFirstName(data.customer.first_name)
-                setLastName(data.customer.last_name)
-                setEmail(data.customer.email)
-            })
-            .catch(err => console.error(err))
-    }, [id])
-
-    if (!customer) {
-        return <div className="p-10 text-xl">Loading...</div>
-    }
+    //if (!customer) {
+    //    return <div className="p-10 text-xl">Loading...</div>
+    //}
 
     const handleSave = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/query/editCustomer`, {
+            const response = await fetch(`http://localhost:8080/query/addCustomer`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -59,7 +46,7 @@ const EditCustomerDetails = () => {
             <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8">
 
                 <h1 className="text-4xl font-bold mb-4">
-                    Edit Customer Details
+                    Add New Customer
                 </h1>
 
                 <p className="text-gray-600 mb-2">
@@ -70,7 +57,7 @@ const EditCustomerDetails = () => {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="border p-2 rounded"
-                    placeholder="First name"
+                    placeholder="Enter first name"
                 />
 
                 <p className="text-gray-600 mb-2">
@@ -81,7 +68,7 @@ const EditCustomerDetails = () => {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     className="border p-2 rounded"
-                    placeholder="Last name"
+                    placeholder="Enter last name"
                 />
 
                 <p className="text-gray-600 mb-2">
@@ -92,29 +79,26 @@ const EditCustomerDetails = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="border p-2 rounded"
-                    placeholder="Email"
+                    placeholder="Enter email"
                 />
 
+                {/* 
                 <button className="flex flex-col items-center text-blue-500 hover:text-blue-700 transition mt-3">
-                    <Link
-                        to={`/customers/${customer.customer.customer_id}`}
-                        onClick={handleSave}
-                        className="text-xl font-semibold">
+                    <Link to={`/customers/${customer.customer.customer_id}`} className="text-xl font-semibold">
                         Save
                     </Link>
-                </button>
+                </button>*/}
 
                 <button className="flex flex-col items-center text-red-500 hover:text-red-700 transition mt-3">
-                    <Link
-                        to="/customersearch"
-                        className="text-xl font-semibold">
-                        Delete Customer
+                    <Link to="/customersearch" className="text-xl font-semibold">
+                        Cancel
                     </Link>
                 </button>
+                
 
             </div>
         </div>
     )
 }
 
-export default EditCustomerDetails
+export default AddNewCustomer

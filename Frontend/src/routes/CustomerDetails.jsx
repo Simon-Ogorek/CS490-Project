@@ -46,7 +46,7 @@ const CustomerDetails = () => {
                                 key={rental.rental_id}
                                 className="border-b py-2"
                             >
-                                Rental ID: {rental.rental_id} <br />
+                                Film Rented: {rental.title} <br />
                                 Rental Date: {new Date(rental.rental_date).toLocaleDateString()} <br />
                                 Return Date: {rental.return_date
                                     ? new Date(rental.return_date).toLocaleDateString()

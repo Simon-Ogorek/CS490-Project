@@ -7,6 +7,7 @@ import ActorDetails from "./routes/ActorDetails"
 import CustomerSearch from "./routes/CustomerSearch"
 import CustomerDetails from "./routes/CustomerDetails"
 import EditCustomerDetails from "./routes/EditCustomerDetails"
+import AddNewCustomer from "./routes/AddNewCustomer"
 
 function App() {
     return (
@@ -21,6 +22,7 @@ function App() {
                     <Route path="/customersearch" element={<CustomerSearch />} />
                     <Route path="/customers/:id" element={<CustomerDetails />} />
                     <Route path="/editcustomer/:id" element={<EditCustomerDetails />} />
+                    <Route path="/addcustomer" element={<AddNewCustomer />} />
                 </Routes>
             </div>
         </>
