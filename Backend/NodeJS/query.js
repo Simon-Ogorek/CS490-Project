@@ -338,6 +338,14 @@ router.post('/deleteCustomer', async (req, res) => {
     try {
         await connection.beginTransaction();
 
+        await connection.execute(`
+        delete from sakila.rental where customer_id = ?`,
+            [req.body.id]);
+
+        await connection.execute(`
+        delete from sakila.payment where customer_id = ?`,
+            [req.body.id]);
+
         const [customerResult] = await connection.execute(`
         delete from sakila.customer where customer.customer_id = ?`,
             [req.body.id]);

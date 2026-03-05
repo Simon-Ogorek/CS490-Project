@@ -1,8 +1,10 @@
 import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 const EditCustomerDetails = () => {
+    const navigate = useNavigate()
+
     const { id } = useParams()
 
     const [customer, setCustomer] = useState(null)
@@ -47,10 +49,38 @@ const EditCustomerDetails = () => {
             }
 
             alert("Customer updated successfully!")
+            navigate(`/customers/${customer.customer.customer_id}`)
         }
+        
         catch (err) {
             console.error(err)
             alert("Error updating customer")
+        }
+    }
+
+    const handleDelete = async () => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this customer?")
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(`http://localhost:8080/query/deleteCustomer`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ id })
+            })
+
+            if (!response.ok) {
+                throw new Error("Failed to delete")
+            }
+
+            alert("Customer deleted successfully!")
+            navigate("/customersearch")
+        }
+        catch (err) {
+            console.error(err)
+            alert("Error deleting customer")
         }
     }
 
@@ -97,16 +127,24 @@ const EditCustomerDetails = () => {
 
                 <button className="flex flex-col items-center text-blue-500 hover:text-blue-700 transition mt-3">
                     <Link
-                        to={`/customers/${customer.customer.customer_id}`}
+                        
                         onClick={handleSave}
                         className="text-xl font-semibold">
                         Save
                     </Link>
                 </button>
 
+                <button className="flex flex-col items-center text-blue-500 hover:text-blue-700 transition mt-3">
+                    <Link
+                        to={`/customers/${customer.customer.customer_id}`}
+                        className="text-xl font-semibold">
+                        Cancel
+                    </Link>
+                </button>
+
                 <button className="flex flex-col items-center text-red-500 hover:text-red-700 transition mt-3">
                     <Link
-                        to="/customersearch"
+                        onClick={handleDelete}
                         className="text-xl font-semibold">
                         Delete Customer
                     </Link>
