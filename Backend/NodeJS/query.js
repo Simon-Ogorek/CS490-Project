@@ -379,7 +379,7 @@ router.get('/getCustomerDetails/:id', async (req, res) => {
       [req.params.id])
 
       const [rental] = await pool.query(`
-      select rental.rental_date, rental.return_date, film.title from sakila.rental
+      select rental.rental_id, rental.rental_date, rental.return_date, film.title from sakila.rental
       join inventory on rental.inventory_id = inventory.inventory_id
       join film on inventory.film_id = film.film_id
       where rental.customer_id = ?`,

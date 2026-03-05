@@ -1,18 +1,15 @@
 import { useParams } from "react-router-dom"
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
 
 const AddNewCustomer = () => {
+    const navigate = useNavigate()
+
     const { id } = useParams()
 
-    //const [customer, setCustomer] = useState(null)
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
-
-    //if (!customer) {
-    //    return <div className="p-10 text-xl">Loading...</div>
-    //}
 
     const handleSave = async () => {
         try {
@@ -30,14 +27,16 @@ const AddNewCustomer = () => {
             })
 
             if (!response.ok) {
-                throw new Error("Failed to update")
+                throw new Error("Failed to add customer")
             }
 
-            alert("Customer updated successfully!")
+            alert("Customer added successfully!")
+            //navigate(`/customers/${customer.customer.customer_id}`)
+            navigate("/customersearch")
         }
         catch (err) {
             console.error(err)
-            alert("Error updating customer")
+            alert("Error adding customer")
         }
     }
 
@@ -82,15 +81,14 @@ const AddNewCustomer = () => {
                     placeholder="Enter email"
                 />
 
-                {/* 
                 <button className="flex flex-col items-center text-blue-500 hover:text-blue-700 transition mt-3">
-                    <Link to={`/customers/${customer.customer.customer_id}`} className="text-xl font-semibold">
+                    <Link onClick={handleSave} className="text-xl font-semibold">
                         Save
                     </Link>
-                </button>*/}
+                </button>
 
                 <button className="flex flex-col items-center text-red-500 hover:text-red-700 transition mt-3">
-                    <Link to="/customersearch" className="text-xl font-semibold">
+                    <Link className="text-xl font-semibold">
                         Cancel
                     </Link>
                 </button>
